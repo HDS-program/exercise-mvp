@@ -8,13 +8,6 @@ st.set_page_config(
 
 st.title("🏋️ 운동 효율 분석 시스템")
 
-st.write("Streamlit + Supabase MVP 시작")
-from services.supabase_client import supabase
+st.write("Welcome to Exercise MVP - 데이터 기반 운동 의사결정 지원 시스템")
 
-response = supabase.table("muscle_groups").select("*").execute()
-
-
-st.subheader("근육 부위 목록")
-
-for item in response.data:
-    st.write(item["muscle_name"])
+st.info("좌측 사이드바에서 메뉴를 선택하여 시작하세요!")
