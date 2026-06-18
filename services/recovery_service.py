@@ -24,9 +24,10 @@ def get_sessions_without_recovery(user_id: str) -> list:
     """
     try:
         all_sessions = supabase.table("workout_sessions") \
-            .select("*") \
+            .select("*, routines(routine_name)") \
             .eq("user_id", user_id) \
             .order("workout_date", desc=True) \
+            .order("session_id", desc=True) \
             .execute()
 
         if not all_sessions.data:
@@ -62,12 +63,12 @@ def create_recovery_record(
     """
     try:
         data = {
-    "session_id": session_id,
-    "recorded_date": recovery_date,
-    "overall_fatigue": overall_fatigue,
-    "overall_condition": overall_condition,
-    "memo": memo
-}
+            "session_id": session_id,
+            "recorded_date": recovery_date,
+            "overall_fatigue": overall_fatigue,
+            "overall_condition": overall_condition,
+            "memo": memo
+        }
 
         response = supabase.table("recovery_records").insert(data).execute()
 
@@ -98,10 +99,10 @@ def create_muscle_recovery_record(
     try:
         data = {
             "recovery_id": recovery_id,
-            "muscle_id": muscle_id,
-            "soreness": soreness,
-            "pain": pain,
-            "recovery_status": recovery_status
+            "muscle_group_id": muscle_id,
+            "soreness_level": soreness,
+            "pain_level": pain,
+            "recovery_level": recovery_status
         }
 
         response = supabase.table("recovery_muscle_records").insert(data).execute()
@@ -129,6 +130,7 @@ def get_latest_recovery_record(user_id: str) -> dict | None:
             .select("session_id") \
             .eq("user_id", user_id) \
             .order("workout_date", desc=True) \
+            .order("session_id", desc=True) \
             .limit(1) \
             .execute()
 
@@ -140,6 +142,8 @@ def get_latest_recovery_record(user_id: str) -> dict | None:
         response = supabase.table("recovery_records") \
             .select("*") \
             .eq("session_id", latest_session_id) \
+            .order("recorded_date", desc=True) \
+            .limit(1) \
             .execute()
 
         return response.data[0] if response.data else None

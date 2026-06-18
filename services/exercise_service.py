@@ -5,12 +5,13 @@ from services.supabase_client import supabase
 def get_all_exercises() -> list:
     """
     모든 운동 종목 조회
-
-    Returns:
-        운동 종목 목록
     """
     try:
-        response = supabase.table("exercises").select("*").execute()
+        response = supabase.table("exercises") \
+            .select("*") \
+            .order("exercise_id") \
+            .execute()
+
         return response.data if response.data else []
 
     except Exception as e:
@@ -18,15 +19,51 @@ def get_all_exercises() -> list:
         return []
 
 
+def create_exercise(exercise_name: str, description: str = "") -> dict:
+    """
+    새 운동 종목 추가
+    """
+    try:
+        data = {
+            "exercise_name": exercise_name,
+            "description": description
+        }
+
+        response = supabase.table("exercises").insert(data).execute()
+
+        return {
+            "success": True,
+            "data": response.data[0] if response.data else None,
+            "error": None
+        }
+
+    except Exception as e:
+        error_message = str(e)
+
+        if "duplicate key value" in error_message or "exercises_exercise_name_key" in error_message:
+            return {
+                "success": False,
+                "data": None,
+                "error": "이미 존재하는 운동 종목입니다."
+            }
+
+        return {
+            "success": False,
+            "data": None,
+            "error": f"운동 종목 추가 실패: {error_message}"
+        }
+
+
 def get_muscle_groups() -> list:
     """
     모든 근육 부위 조회
-
-    Returns:
-        근육 부위 목록
     """
     try:
-        response = supabase.table("muscle_groups").select("*").execute()
+        response = supabase.table("muscle_groups") \
+            .select("*") \
+            .order("muscle_group_id") \
+            .execute()
+
         return response.data if response.data else []
 
     except Exception as e:
@@ -37,20 +74,12 @@ def get_muscle_groups() -> list:
 def get_exercise_target_muscles(exercise_id: int) -> list:
     """
     운동의 목표 근육 부위 조회
-
-    Args:
-        exercise_id: 운동 ID
-
-    Returns:
-        목표 근육 부위 목록
     """
     try:
-        response = (
-            supabase.table("exercise_target_muscles")
-            .select("muscle_groups(muscle_name)")
-            .eq("exercise_id", exercise_id)
+        response = supabase.table("exercise_target_muscles") \
+            .select("muscle_groups(muscle_name)") \
+            .eq("exercise_id", exercise_id) \
             .execute()
-        )
 
         return response.data if response.data else []
 
@@ -62,20 +91,13 @@ def get_exercise_target_muscles(exercise_id: int) -> list:
 def search_exercises(search_term: str) -> list:
     """
     운동 종목 검색
-
-    Args:
-        search_term: 검색어
-
-    Returns:
-        검색 결과 목록
     """
     try:
-        response = (
-            supabase.table("exercises")
-            .select("*")
-            .ilike("exercise_name", f"%{search_term}%")
+        response = supabase.table("exercises") \
+            .select("*") \
+            .ilike("exercise_name", f"%{search_term}%") \
+            .order("exercise_id") \
             .execute()
-        )
 
         return response.data if response.data else []
 
@@ -86,10 +108,6 @@ def search_exercises(search_term: str) -> list:
 
 def get_exercises() -> list:
     """
-    기존 페이지(Workout_Input 등)와의 호환성을 위한 함수.
-    모든 운동 종목을 반환한다.
-
-    Returns:
-        운동 종목 목록
+    Workout Input 등 기존 페이지와의 호환용 함수
     """
     return get_all_exercises()

@@ -33,15 +33,20 @@ try:
 
     for session in sessions_without_recovery:
         workout_date = session.get("workout_date", "날짜 없음")
+        session_id = session.get("session_id")
+        routine_id = session.get("routine_id")
 
         routine_data = session.get("routines")
+
         if isinstance(routine_data, dict):
             routine_name = routine_data.get("routine_name", "루틴 없음")
         else:
             routine_name = "루틴 없음"
 
-        session_id = session.get("session_id")
-        label = f"{workout_date} - {routine_name}"
+        if routine_id is None:
+            routine_name = "루틴 없음"
+
+        label = f"{workout_date} - {routine_name} (세션:{session_id})"
         session_options[label] = session_id
 
     selected_session_label = st.selectbox(
@@ -68,56 +73,56 @@ try:
     muscle_groups = get_muscle_groups()
 
     if not muscle_groups:
-        st.error("근육 부위 데이터를 불러올 수 없습니다.")
-        st.stop()
+        st.warning("근육 부위 데이터를 불러올 수 없습니다. 전체 회복 기록만 저장할 수 있습니다.")
+        muscle_recovery_data = {}
+    else:
+        muscle_recovery_data = {}
 
-    muscle_recovery_data = {}
+        for muscle in muscle_groups:
+            muscle_id = muscle.get("muscle_group_id")
+            muscle_name = muscle.get("muscle_name", "Unknown")
 
-    for muscle in muscle_groups:
-        muscle_id = muscle.get("muscle_id")
-        muscle_name = muscle.get("muscle_name", "Unknown")
+            if muscle_id is None:
+                continue
 
-        if muscle_id is None:
-            continue
+            st.write(f"**{muscle_name}**")
 
-        st.write(f"**{muscle_name}**")
+            col1, col2, col3 = st.columns(3)
 
-        col1, col2, col3 = st.columns(3)
+            with col1:
+                soreness = st.slider(
+                    f"{muscle_name} 근육통 (0-10)",
+                    0,
+                    10,
+                    3,
+                    key=f"soreness_{muscle_id}"
+                )
 
-        with col1:
-            soreness = st.slider(
-                f"{muscle_name} 근육통 (0-10)",
-                0,
-                10,
-                3,
-                key=f"soreness_{muscle_id}"
-            )
+            with col2:
+                pain = st.slider(
+                    f"{muscle_name} 통증 (0-10)",
+                    0,
+                    10,
+                    0,
+                    key=f"pain_{muscle_id}"
+                )
 
-        with col2:
-            pain = st.slider(
-                f"{muscle_name} 통증 (0-10)",
-                0,
-                10,
-                0,
-                key=f"pain_{muscle_id}"
-            )
+            with col3:
+                recovery_status = st.slider(
+                    f"{muscle_name} 회복 정도 (0-10)",
+                    0,
+                    10,
+                    5,
+                    key=f"recovery_{muscle_id}"
+                )
 
-        with col3:
-            recovery_status = st.slider(
-                f"{muscle_name} 회복 정도 (0-10)",
-                0,
-                10,
-                5,
-                key=f"recovery_{muscle_id}"
-            )
+            muscle_recovery_data[muscle_id] = {
+                "soreness": soreness,
+                "pain": pain,
+                "recovery_status": recovery_status
+            }
 
-        muscle_recovery_data[muscle_id] = {
-            "soreness": soreness,
-            "pain": pain,
-            "recovery_status": recovery_status
-        }
-
-        st.divider()
+            st.divider()
 
     st.subheader("4️⃣ 메모")
 
@@ -152,6 +157,7 @@ try:
 
         st.success("✅ 회복 기록이 저장되었습니다!")
         st.balloons()
+        st.rerun()
 
 except Exception as e:
     st.error(f"오류가 발생했습니다: {str(e)}")

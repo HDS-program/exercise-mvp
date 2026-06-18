@@ -144,3 +144,80 @@ def get_session_details(session_id: int) -> dict | None:
     except Exception as e:
         print(f"세션 조회 실패: {str(e)}")
         return None
+    
+def get_workout_history(user_id: str, limit: int = 20) -> list:
+    """
+    운동 기록 조회
+    """
+
+    try:
+        response = supabase.table("workout_sessions") \
+            .select("*") \
+            .eq("user_id", user_id) \
+            .order("workout_date", desc=True) \
+            .order("session_id", desc=True) \
+            .limit(limit) \
+            .execute()
+
+        return response.data if response.data else []
+
+    except Exception as e:
+        print(f"운동 기록 조회 실패: {str(e)}")
+        return []
+
+def get_workout_history(user_id: str, limit: int = 20) -> list:
+    """
+    사용자의 운동 세션 목록 조회
+    """
+
+    try:
+        response = supabase.table("workout_sessions") \
+            .select("*") \
+            .eq("user_id", user_id) \
+            .order("workout_date", desc=True) \
+            .order("session_id", desc=True) \
+            .limit(limit) \
+            .execute()
+
+        return response.data if response.data else []
+
+    except Exception as e:
+        print(f"운동 이력 조회 실패: {str(e)}")
+        return []
+
+
+def get_session_workout_records(session_id: int) -> list:
+    """
+    특정 세션 운동 목록 조회
+    """
+
+    try:
+        response = supabase.table("workout_records") \
+            .select("*, exercises(exercise_name)") \
+            .eq("session_id", session_id) \
+            .execute()
+
+        return response.data if response.data else []
+
+    except Exception as e:
+        print(f"운동 기록 조회 실패: {str(e)}")
+        return []
+
+
+def get_record_sets(workout_record_id: int) -> list:
+    """
+    특정 운동 세트 조회
+    """
+
+    try:
+        response = supabase.table("workout_sets") \
+            .select("*") \
+            .eq("workout_record_id", workout_record_id) \
+            .order("set_number") \
+            .execute()
+
+        return response.data if response.data else []
+
+    except Exception as e:
+        print(f"세트 조회 실패: {str(e)}")
+        return []
